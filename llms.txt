@@ -1,0 +1,115 @@
+# TokenCap
+> Self-hosted, zero-dependency safety proxy for autonomous AI agents. Enforces daily/monthly hard caps, sliding-window rate limits, prompt caching cost tracking, and intelligent micro-pacing via local SQLite.
+
+## Overview
+TokenCap sits transparently between AI agents (Antigravity, Claude Code, Cursor, Cline, AutoGPT, CrewAI) and model providers (OpenAI, Anthropic, Google Gemini). It tracks every token and dollar spent in real-time. When a budget limit is reached, it returns standard HTTP `429 Too Many Requests` with a calculated `Retry-After` header instead of crashing agent processes.
+
+- Default Port: `8787`
+- Local Console: `GET http://localhost:8787/dashboard` (Authenticated via `TOKENCAP_DASHBOARD_USER` / `TOKENCAP_DASHBOARD_PASSWORD` in `.env`)
+- Health Endpoint: `GET http://localhost:8787/health`
+- Models Catalog: `GET http://localhost:8787/v1/models` (OpenAI / LiteLLM compatible registry)
+- Storage: Single local file (`tokencap.sqlite` with WAL mode) with microsecond query evaluation.
+
+## Quickstart
+1. Run immediately via NPX:
+   ```bash
+   npx tokencap --open
+   ```
+2. Or install globally as a system CLI:
+   ```bash
+   npm install -g tokencap
+   tokencap init
+   tokencap --port 8787 --open
+   ```
+3. Or run via Docker Compose:
+   ```bash
+   git clone https://github.com/tokencap/tokencap.git && cd tokencap
+   docker compose up -d
+   ```
+
+## Configuration Schema (`tokencap.json`)
+```json
+{
+  "port": 8787,
+  "databasePath": "./tokencap.sqlite",
+  "keys": {
+    "virtual_openai_key": {
+      "provider": "openai",
+      "targetApiKey": "sk-real-openai-api-key",
+      "hardCapDaily": 5.0,
+      "hardCapMonthly": 50.0,
+      "rollingWindowCap": 0.5,
+      "rollingWindowSeconds": 3600,
+      "autoPacing": {
+        "enabled": true,
+        "maxHoldSeconds": 30
+      },
+      "alertsEnabled": false,
+      "webhookUrl": "https://discord.com/api/webhooks/...",
+      "alertThresholdPercent": 0.8
+    },
+    "virtual_claude_key": {
+      "provider": "anthropic",
+      "targetApiKey": "sk-ant-real-anthropic-key",
+      "hardCapDaily": 10.0,
+      "hardCapMonthly": 100.0,
+      "rollingWindowCap": 1.5,
+      "rollingWindowSeconds": 3600
+    },
+    "virtual_gemini_key": {
+      "provider": "google",
+      "targetApiKey": "AIzaSyRealGeminiKey",
+      "hardCapDaily": 3.0,
+      "hardCapMonthly": 30.0,
+      "rollingWindowCap": 0.3,
+      "rollingWindowSeconds": 3600
+    }
+  }
+}
+```
+
+## Agent Integrations (Drop-in Base URL Overrides)
+
+### OpenAI (Python / TS)
+- Base URL: `http://localhost:8787/v1`
+- API Key: `virtual_openai_key`
+- Supports: Responses and streaming completions with `stream_options.include_usage: true` (injected automatically).
+
+### Anthropic Claude (Python / TS / Claude Code CLI)
+- Base URL: `http://localhost:8787`
+- Auth Header: `x-api-key: virtual_claude_key`
+- For Claude Code CLI:
+  ```bash
+  export ANTHROPIC_BASE_URL="http://localhost:8787"
+  export ANTHROPIC_API_KEY="virtual_claude_key"
+  claude
+  ```
+
+### Google Gemini (Python / TS)
+- Base URL: `http://localhost:8787`
+- Query / Header: standard `x-goog-api-key: virtual_gemini_key` or `?key=virtual_gemini_key`
+- Target path: `/v1beta/models/{model}:{action}`
+
+### Google Antigravity (AGY CLI / IDE)
+In project `.env` or global environment:
+```bash
+OPENAI_BASE_URL=http://localhost:8787/v1
+OPENAI_API_KEY=virtual_openai_key
+ANTHROPIC_BASE_URL=http://localhost:8787
+ANTHROPIC_API_KEY=virtual_claude_key
+GEMINI_BASE_URL=http://localhost:8787
+GEMINI_API_KEY=virtual_gemini_key
+```
+
+### Cursor / Cline / Roo Code / Windsurf
+- Model Provider: Select OpenAI-compatible (or Anthropic-compatible).
+- Base URL: `http://localhost:8787/v1` (or `http://localhost:8787` for Anthropic).
+- API Key: your virtual key matching `tokencap.json`.
+
+## Cruise Control & Auto-Pacing
+- TokenCap calculates the exact seconds until the sliding window reopens based on SQLite timestamps.
+- Returns `Retry-After: <seconds>` on HTTP 429.
+- If `autoPacing.enabled` is `true` and the required wait time is `<= maxHoldSeconds`, TokenCap holds the HTTP request in a sleep promise and transparently resumes when capacity is freed, preventing agent crashes.
+
+## Optional Full Documentation
+- Detailed guides: [README.md](README.md)

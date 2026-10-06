@@ -1,0 +1,15 @@
+node_modules
+dist
+.git
+.gitignore
+.wrangler
+*.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+tokencap.json
+tokencap.yaml
+.env
+.env.*
+.DS_Store
+*.log

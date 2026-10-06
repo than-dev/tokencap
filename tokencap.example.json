@@ -1,0 +1,25 @@
+{
+  "port": 8787,
+  "keys": {
+    "tokencap_sk_myagent": {
+      "provider": "openai",
+      "realKey": "sk-proj-YOUR_ACTUAL_OPENAI_KEY_HERE",
+      "hardCapDaily": 5.0,
+      "hardCapMonthly": 50.0,
+      "rollingWindowCap": 1.0,
+      "rollingWindowSeconds": 3600,
+      "autoPacing": {
+        "enabled": true,
+        "maxHoldSeconds": 30
+      },
+      "loopBuster": {
+        "enabled": true,
+        "maxRepeats": 3,
+        "windowSeconds": 120
+      },
+      "alertsEnabled": false,
+      "webhookUrl": "https://discord.com/api/webhooks/...",
+      "alertThresholdPercent": 0.8
+    }
+  }
+}
