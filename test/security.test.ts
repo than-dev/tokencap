@@ -3,14 +3,9 @@ import path from 'node:path';
 import { describe, test } from 'node:test';
 import Database from 'better-sqlite3';
 import { createApp } from '../src/app';
-import {
-  checkBudget,
-  getConfig,
-  getInFlightCount,
-  trackInFlightEnd,
-  trackInFlightStart,
-  updateUsage,
-} from '../src/db/store';
+import { getConfig } from '../src/config';
+import { checkBudget, updateUsage } from '../src/services/budget';
+import { getInFlightCount, trackInFlightEnd, trackInFlightStart } from '../src/services/inFlight';
 import type { TokenCapConfig } from '../src/types';
 import { sendAlert } from '../src/utils/webhook';
 
@@ -34,6 +29,7 @@ describe('Security Controls & Persistence', () => {
       });
 
       assert.strictEqual(res.status, 401, `Prototype key "${key}" must return 401 Unauthorized`);
+      // biome-ignore lint/suspicious/noExplicitAny: test mock
       const body = (await res.json()) as any;
       assert.strictEqual(body.error, 'Invalid Virtual Key');
     }
@@ -155,6 +151,7 @@ describe('Security Controls & Persistence', () => {
   test('SEC-06: Blocks SSRF against cloud metadata or non-HTTPS webhooks', async () => {
     let loggedWarning = false;
     const origError = console.error;
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     console.error = (...args: any[]) => {
       if (args[0]?.includes('Blocked insecure webhook URL protocol')) {
         loggedWarning = true;

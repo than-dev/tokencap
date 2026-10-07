@@ -6,7 +6,10 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { serve } from '@hono/node-server';
 import { createApp } from './app';
-import { getConfigPath, getDbPath, loadConfig, resetKeyUsage } from './db/store';
+import { getConfigPath, loadConfig } from './config';
+import { getDbPath } from './db/connection';
+import { deleteUsageForKey } from './db/usageRepository';
+import { deleteLoopSignaturesForKey } from './db/loopRepository';
 
 const pkgPath = path.resolve(__dirname, '../package.json');
 let pkgVersion = '1.0.0';
@@ -31,7 +34,7 @@ function printBanner(
   \x1b[90m─────────────────────────────────────────────────────────────\x1b[0m
   → \x1b[1mProxy Endpoint:\x1b[0m    http://${displayHost}:${port}
   → \x1b[1mConsole Dashboard:\x1b[0m http://${displayHost}:${port}/dashboard
-  → \x1b[1mDatabase:\x1b[0m          ${dbPath} \x1b[32m(SQLite WAL)\x1b[0m
+  → \x1b[1mLedger:\x1b[0m            ${dbPath} \x1b[32m(crash-safe)\x1b[0m
   → \x1b[1mConfiguration:\x1b[0m     ${configPath} \x1b[36m(${keyCount} virtual key${keyCount === 1 ? '' : 's'})\x1b[0m
   → \x1b[1mCruise Control:\x1b[0m    Auto-Pacing & Loop Buster \x1b[32mActive\x1b[0m
   \x1b[90m─────────────────────────────────────────────────────────────\x1b[0m
@@ -66,7 +69,7 @@ function printHelp() {
   -p, --port <number>  Port to listen on (default: 8787 or $PORT)
   -H, --host <string>  Host to bind to (default: 0.0.0.0)
   -c, --config <path>  Path to tokencap.json or tokencap.yaml
-  -d, --db <path>      Path to SQLite database file (default: ./tokencap.sqlite)
+  -d, --db <path>      Path to the usage ledger file (default: ./tokencap.sqlite)
   -o, --open           Automatically open console dashboard in default browser
   --user <string>      Override dashboard username (default: admin or $TOKENCAP_DASHBOARD_USER)
   --pass <string>      Override dashboard password (default: admin or $TOKENCAP_DASHBOARD_PASSWORD)
@@ -154,6 +157,8 @@ async function handleStatus(port: number) {
   try {
     const res = await fetch(url);
     if (res.ok) {
+      // biome-ignore lint/suspicious/noExplicitAny: parsing dynamic JSON
+      // biome-ignore lint/suspicious/noExplicitAny: parsing dynamic JSON
       const data = (await res.json()) as any;
       console.log(`\x1b[32m✔ TokenCap is running and healthy on port ${port}!\x1b[0m`);
       console.log(`  Service:   ${data.service || 'tokencap'}`);
@@ -217,7 +222,8 @@ async function main() {
       );
       process.exit(1);
     }
-    resetKeyUsage(virtualKey);
+    deleteUsageForKey(virtualKey);
+      deleteLoopSignaturesForKey(virtualKey);
     console.log(`\x1b[32m✔ Purged usage records and loop signatures for:\x1b[0m ${virtualKey}`);
     return;
   }

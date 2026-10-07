@@ -561,7 +561,7 @@ export function renderDashboardHtml(): string {
   </div>
 
   <footer class="bottom-info">
-    <div>TokenCap Engine · Zero External Telemetry · Local SQLite Ledger</div>
+    <div>TokenCap Engine · Zero External Telemetry · Local Ledger</div>
     <div>Config file: <code>./tokencap.json</code></div>
   </footer>
 

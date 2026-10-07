@@ -14,10 +14,12 @@ describe('OpenAI Proxy Handler', () => {
   };
 
   test('injects stream_options.include_usage when stream is true', async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     let capturedBody: any = null;
     let capturedHeaders: Headers | null = null;
     const originalFetch = globalThis.fetch;
 
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     globalThis.fetch = (async (_url: any, init: any) => {
       capturedBody = JSON.parse(init.body);
       capturedHeaders = new Headers(init.headers);
@@ -25,7 +27,7 @@ describe('OpenAI Proxy Handler', () => {
         status: 200,
         headers: { 'content-type': 'application/json' },
       });
-    }) as any;
+    }) as any; // biome-ignore lint/suspicious/noExplicitAny: test mock
 
     try {
       const req = new Request('http://localhost:8787/v1/chat/completions', {

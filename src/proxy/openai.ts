@@ -1,4 +1,4 @@
-import { updateUsage } from '../db/store';
+import { updateUsage } from '../services/budget';
 import type { TokenCapConfig } from '../types';
 import { handleLoopBuster } from '../utils/loopDetector';
 import { calculateCost } from '../utils/pricing';
@@ -15,6 +15,8 @@ export async function handleOpenAI(
   headers.set('Authorization', `Bearer ${config.realKey}`);
   headers.delete('host');
 
+  // biome-ignore lint/suspicious/noExplicitAny: parsing dynamic JSON
+  // biome-ignore lint/suspicious/noExplicitAny: parsing dynamic JSON
   let body: any = null;
   let model = 'gpt-4o'; // default
   let requestBody: string | undefined;
@@ -56,7 +58,8 @@ export async function handleOpenAI(
       method: req.method,
       headers,
       body: requestBody,
-    } as any);
+    });
+    // biome-ignore lint/suspicious/noExplicitAny: error can be anything
   } catch (err: any) {
     console.error('OpenAI upstream connection error:', err?.message || err);
     return Response.json(
@@ -68,6 +71,8 @@ export async function handleOpenAI(
   if (!isStreaming || !response.ok) {
     const clone = response.clone();
     try {
+      // biome-ignore lint/suspicious/noExplicitAny: parsing dynamic JSON
+      // biome-ignore lint/suspicious/noExplicitAny: parsing dynamic JSON
       const data = (await clone.json()) as any;
       if (data.usage) {
         const inputTokens = data.usage.prompt_tokens || 0;

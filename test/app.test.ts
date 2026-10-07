@@ -8,6 +8,7 @@ describe('HTTP Routes & Auth Guard', () => {
   test('GET /health returns 200 without authentication', async () => {
     const res = await app.request('/health');
     assert.strictEqual(res.status, 200);
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     const body = (await res.json()) as any;
     assert.strictEqual(body.status, 'ok');
     assert.strictEqual(body.service, 'tokencap');
@@ -16,6 +17,7 @@ describe('HTTP Routes & Auth Guard', () => {
   test('GET / returns 200 status message without authentication', async () => {
     const res = await app.request('/');
     assert.strictEqual(res.status, 200);
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     const body = (await res.json()) as any;
     assert.strictEqual(body.status, 'ok');
   });
@@ -34,6 +36,7 @@ describe('HTTP Routes & Auth Guard', () => {
       body: JSON.stringify({ messages: [] }),
     });
     assert.strictEqual(res.status, 401);
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     const body = (await res.json()) as any;
     assert.strictEqual(body.error, 'Missing Authentication');
   });
@@ -48,6 +51,7 @@ describe('HTTP Routes & Auth Guard', () => {
       body: JSON.stringify({ messages: [] }),
     });
     assert.strictEqual(res.status, 401);
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     const body = (await res.json()) as any;
     assert.strictEqual(body.error, 'Invalid Virtual Key');
   });
@@ -81,6 +85,7 @@ describe('HTTP Routes & Auth Guard', () => {
       body: JSON.stringify({ username: 'admin', password: 'wrongpassword' }),
     });
     assert.strictEqual(res.status, 401);
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     const body = (await res.json()) as any;
     assert.strictEqual(body.error, 'Invalid username or password');
   });
@@ -114,6 +119,7 @@ describe('HTTP Routes & Auth Guard', () => {
       headers: { Cookie: cookieHeader },
     });
     assert.strictEqual(statsRes.status, 200);
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     const statsBody = (await statsRes.json()) as any;
     assert.ok(typeof statsBody.uptimeSeconds === 'number');
     assert.ok(typeof statsBody.totalToday === 'number');

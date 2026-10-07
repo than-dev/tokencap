@@ -42,7 +42,6 @@
     "better-sqlite3": "^13.0.3",
     "dotenv": "^18.0.5",
     "hono": "^4.13.13",
-    "openai": "^7.28.0",
     "yaml": "^2.9.1"
   },
   "devDependencies": {

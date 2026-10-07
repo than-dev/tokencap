@@ -1,7 +1,9 @@
 import assert from 'node:assert';
 import { describe, test } from 'node:test';
 import { createApp } from '../src/app';
-import { saveKeyConfig, updateUsage } from '../src/db/store';
+import { saveKeyConfig } from '../src/config';
+import { updateUsage } from '../src/services/budget';
+
 import type { TokenCapConfig } from '../src/types';
 
 describe('Cruise Control & Auto-Pacing HTTP', () => {
@@ -36,6 +38,7 @@ describe('Cruise Control & Auto-Pacing HTTP', () => {
     assert.ok(retryHeader, 'Retry-After header must be present');
     assert.ok(Number(retryHeader) > 0);
 
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     const body = (await res.json()) as any;
     assert.ok(body.error.startsWith('TokenCap Budget Exceeded:'));
     assert.strictEqual(body.retryAfterSeconds, Number(retryHeader));
@@ -56,7 +59,7 @@ describe('Cruise Control & Auto-Pacing HTTP', () => {
     updateUsage(key, config, 0.6);
     updateUsage(key, config, 0.5);
 
-    const { checkBudget } = require('../src/db/store');
+    const { checkBudget } = require('../src/services/budget');
     const result = checkBudget(key, config);
     assert.strictEqual(result.allowed, false);
     assert.strictEqual(result.reason, 'TokenCap Budget Exceeded: Rolling Window');

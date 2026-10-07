@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { createApp } from './app';
-import { loadConfig } from './db/store';
+import { loadConfig } from './config';
 
 const globalConfig = loadConfig();
 const port = Number(process.env.PORT) || globalConfig.port || 8787;

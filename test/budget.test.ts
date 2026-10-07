@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { describe, test } from 'node:test';
-import { checkBudget, updateUsage } from '../src/db/store';
+import { checkBudget, updateUsage } from '../src/services/budget';
 import type { TokenCapConfig } from '../src/types';
 
 describe('Budget enforcer', () => {

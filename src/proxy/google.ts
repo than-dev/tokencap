@@ -1,4 +1,4 @@
-import { updateUsage } from '../db/store';
+import { updateUsage } from '../services/budget';
 import type { TokenCapConfig } from '../types';
 import { handleLoopBuster } from '../utils/loopDetector';
 import { calculateCost } from '../utils/pricing';
@@ -20,6 +20,7 @@ export async function handleGoogle(
   headers.delete('x-api-key');
   headers.delete('authorization');
 
+  // biome-ignore lint/suspicious/noExplicitAny: parsing dynamic JSON
   let body: any = null;
   let model = 'gemini-1.5-pro'; // default guess from url or body
   const modelMatch = url.pathname.match(/models\/([^:]+)/);
@@ -51,7 +52,8 @@ export async function handleGoogle(
       method: req.method,
       headers,
       body: requestBody,
-    } as any);
+    });
+    // biome-ignore lint/suspicious/noExplicitAny: error can be anything
   } catch (err: any) {
     console.error('Google upstream connection error:', err?.message || err);
     return Response.json(
@@ -66,6 +68,7 @@ export async function handleGoogle(
   if (!isStreaming || !response.ok) {
     const clone = response.clone();
     try {
+      // biome-ignore lint/suspicious/noExplicitAny: parsing dynamic JSON
       const data = (await clone.json()) as any;
       if (data.usageMetadata) {
         const inputTokens = data.usageMetadata.promptTokenCount || 0;

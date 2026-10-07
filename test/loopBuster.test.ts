@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { describe, test } from 'node:test';
-import { checkAndRecordLoop } from '../src/db/store';
+import { checkAndRecordLoop } from '../src/services/loopBuster';
 import type { TokenCapConfig } from '../src/types';
 import { extractSignature, handleLoopBuster } from '../src/utils/loopDetector';
 
@@ -126,6 +126,7 @@ describe('Loop Buster (Infinite Loop Detection)', () => {
     assert.ok(tripResponse, 'Must return a Response object when loop is detected');
     assert.strictEqual(tripResponse.status, 429);
 
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
     const data = (await tripResponse.json()) as any;
     assert.strictEqual(data.type, 'loop_detected');
     assert.strictEqual(data.repeats, 3);

@@ -1,4 +1,4 @@
-import { updateUsage } from '../db/store';
+import { updateUsage } from '../services/budget';
 import type { TokenCapConfig } from '../types';
 import { handleLoopBuster } from '../utils/loopDetector';
 import { calculateCost } from '../utils/pricing';
@@ -15,6 +15,7 @@ export async function handleAnthropic(
   headers.set('x-api-key', config.realKey);
   headers.delete('host');
 
+  // biome-ignore lint/suspicious/noExplicitAny: parsing dynamic JSON
   let body: any = null;
   let model = 'claude-3-5-sonnet-20240620'; // default
 
@@ -42,7 +43,8 @@ export async function handleAnthropic(
       method: req.method,
       headers,
       body: requestBody,
-    } as any);
+    });
+    // biome-ignore lint/suspicious/noExplicitAny: error can be anything
   } catch (err: any) {
     console.error('Anthropic upstream connection error:', err?.message || err);
     return Response.json(
@@ -54,6 +56,7 @@ export async function handleAnthropic(
   if (!isStreaming || !response.ok) {
     const clone = response.clone();
     try {
+      // biome-ignore lint/suspicious/noExplicitAny: parsing dynamic JSON
       const data = (await clone.json()) as any;
       if (data.usage) {
         const inputTokens = data.usage.input_tokens || 0;
