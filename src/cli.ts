@@ -8,8 +8,8 @@ import { serve } from '@hono/node-server';
 import { createApp } from './app';
 import { getConfigPath, loadConfig } from './config';
 import { getDbPath } from './db/connection';
-import { deleteUsageForKey } from './db/usageRepository';
 import { deleteLoopSignaturesForKey } from './db/loopRepository';
+import { deleteUsageForKey } from './db/usageRepository';
 
 const pkgPath = path.resolve(__dirname, '../package.json');
 let pkgVersion = '1.0.0';
@@ -223,7 +223,7 @@ async function main() {
       process.exit(1);
     }
     deleteUsageForKey(virtualKey);
-      deleteLoopSignaturesForKey(virtualKey);
+    deleteLoopSignaturesForKey(virtualKey);
     console.log(`\x1b[32m✔ Purged usage records and loop signatures for:\x1b[0m ${virtualKey}`);
     return;
   }

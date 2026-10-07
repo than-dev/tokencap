@@ -149,6 +149,40 @@ npm run dev
 
 ---
 
+### Option 4: "Plug & Play" Node.js SDK (For Wrappers & SaaS)
+
+If you are building your own backend or SaaS and want to use TokenCap's intelligence (budgeting, loop busting, DB storage) directly inside your code without running a separate proxy, you can import the `TokenCapGuard` SDK:
+
+```typescript
+import { TokenCapGuard } from 'tokencap';
+import type { TokenCapConfig } from 'tokencap';
+
+const guard = new TokenCapGuard(); // Uses tokencap.sqlite by default
+
+const config: TokenCapConfig = {
+  provider: 'openai',
+  budgetMode: 'tokens', // 'usd' (default) or 'tokens'
+  hardCapDaily: 50000,  // Max 50,000 tokens/day
+  rollingWindowCap: 10000, 
+  rollingWindowSeconds: 3600 
+};
+
+// Check budget before making your API call
+const check = guard.checkBudget('user_premium_01', config);
+if (!check.allowed) {
+  return res.status(429).json(check); // Automatically returns Retry-After
+}
+
+// ... make OpenAI API call ...
+const cost = 0; 
+const tokens = 1500;
+
+// Record the usage
+guard.updateUsage('user_premium_01', config, cost, tokens);
+```
+
+---
+
 ## ⚙️ Configuration Reference (`tokencap.json`)
 
 TokenCap configuration lives in `tokencap.json` (or `tokencap.yaml`):
@@ -204,9 +238,10 @@ TokenCap configuration lives in `tokencap.json` (or `tokencap.yaml`):
 | `keys` | `object` | Map of Virtual Keys to provider configuration. |
 | `provider` | `string` | One of `"openai"`, `"anthropic"`, or `"google"`. |
 | `realKey` | `string` | Your real upstream provider API key. Kept secure on your host. |
-| `hardCapDaily` | `number` | Maximum allowed spend (in USD) from 00:00 UTC to 23:59 UTC. |
-| `hardCapMonthly` | `number` | Maximum allowed spend (in USD) within the current calendar month. |
-| `rollingWindowCap` | `number` | Maximum spend allowed within the sliding window (e.g. `$0.50`). |
+| `budgetMode` | `string` | *(Optional)* `'usd'` (default) or `'tokens'`. If `'tokens'`, caps apply to raw token counts. |
+| `hardCapDaily` | `number` | Maximum allowed spend (or tokens) from 00:00 UTC to 23:59 UTC. |
+| `hardCapMonthly` | `number` | Maximum allowed spend (or tokens) within the current calendar month. |
+| `rollingWindowCap` | `number` | Maximum spend (or tokens) allowed within the sliding window. |
 | `rollingWindowSeconds` | `number` | Duration of the sliding window in seconds (e.g. `3600` for 1 hour). |
 | `autoPacing` | `object` | *(Optional)* Cruise Control configuration (see below). |
 | `autoPacing.enabled` | `boolean` | *(Optional)* If `true`, pauses short bursts transparently without failing with 429. |

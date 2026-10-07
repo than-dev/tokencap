@@ -72,7 +72,7 @@ export async function handleAnthropic(
           cacheWriteTokens,
           true,
         );
-        updateUsage(virtualKey, config, cost);
+        updateUsage(virtualKey, config, cost, inputTokens + outputTokens);
       }
     } catch (_e) {}
     return response;
@@ -152,7 +152,7 @@ export async function handleAnthropic(
             cacheWriteTokens,
             true,
           );
-          updateUsage(virtualKey, config, cost);
+          updateUsage(virtualKey, config, cost, inputTokens + outputTokens);
         }
         await writer.close().catch(() => {});
       } catch (_) {}

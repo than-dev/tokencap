@@ -1,8 +1,15 @@
 import { db } from './connection';
 
-export function insertUsage(virtualKey: string, timestamp: number, cost: number): void {
-  const stmt = db.prepare('INSERT INTO usage (virtualKey, timestamp, cost) VALUES (?, ?, ?)');
-  stmt.run(virtualKey, timestamp, cost);
+export function insertUsage(
+  virtualKey: string,
+  timestamp: number,
+  cost: number,
+  tokens: number,
+): void {
+  const stmt = db.prepare(
+    'INSERT INTO usage (virtualKey, timestamp, cost, tokens) VALUES (?, ?, ?, ?)',
+  );
+  stmt.run(virtualKey, timestamp, cost, tokens);
 }
 
 export function getSpentSince(virtualKey: string, sinceTimestamp: number): number {
@@ -13,14 +20,26 @@ export function getSpentSince(virtualKey: string, sinceTimestamp: number): numbe
   return result?.total || 0;
 }
 
+export function getTokensSince(virtualKey: string, sinceTimestamp: number): number {
+  const stmt = db.prepare(
+    'SELECT SUM(tokens) as total FROM usage WHERE virtualKey = ? AND timestamp >= ?',
+  );
+  const result = stmt.get(virtualKey, sinceTimestamp) as { total: number };
+  return result?.total || 0;
+}
+
 export function getUsageRecordsSince(virtualKey: string, sinceTimestamp: number) {
   const stmt = db.prepare(`
-    SELECT timestamp, cost 
+    SELECT timestamp, cost, tokens 
     FROM usage 
     WHERE virtualKey = ? AND timestamp >= ? 
     ORDER BY timestamp ASC
   `);
-  return stmt.all(virtualKey, sinceTimestamp) as { timestamp: number; cost: number }[];
+  return stmt.all(virtualKey, sinceTimestamp) as {
+    timestamp: number;
+    cost: number;
+    tokens: number;
+  }[];
 }
 
 export function deleteUsageForKey(virtualKey: string): void {
@@ -35,10 +54,16 @@ export function getTotalSpentSince(sinceTimestamp: number): number {
 
 export function getRecentUsage(limit: number) {
   const stmt = db.prepare(`
-    SELECT id, virtualKey, timestamp, cost 
+    SELECT id, virtualKey, timestamp, cost, tokens 
     FROM usage 
     ORDER BY timestamp DESC 
     LIMIT ?
   `);
-  return stmt.all(limit) as { id: number; virtualKey: string; timestamp: number; cost: number }[];
+  return stmt.all(limit) as {
+    id: number;
+    virtualKey: string;
+    timestamp: number;
+    cost: number;
+    tokens: number;
+  }[];
 }

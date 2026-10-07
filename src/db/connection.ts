@@ -17,7 +17,8 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     virtualKey TEXT NOT NULL,
     timestamp INTEGER NOT NULL,
-    cost REAL NOT NULL
+    cost REAL NOT NULL,
+    tokens INTEGER NOT NULL DEFAULT 0
   );
   CREATE INDEX IF NOT EXISTS idx_usage_key_time ON usage(virtualKey, timestamp);
 
@@ -29,6 +30,12 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_loop_sig ON loop_signatures(virtualKey, signature, timestamp);
 `);
+
+try {
+  db.exec('ALTER TABLE usage ADD COLUMN tokens INTEGER NOT NULL DEFAULT 0');
+} catch (err: any) {
+  // Column likely already exists
+}
 
 const cleanupTimer = setInterval(
   () => {

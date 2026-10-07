@@ -87,7 +87,7 @@ export async function handleOpenAI(
           0,
           false,
         );
-        updateUsage(virtualKey, config, cost);
+        updateUsage(virtualKey, config, cost, inputTokens + outputTokens);
       }
     } catch (_e) {}
     return response;
@@ -168,7 +168,7 @@ export async function handleOpenAI(
             0,
             false,
           );
-          updateUsage(virtualKey, config, cost);
+          updateUsage(virtualKey, config, cost, inputTokens + outputTokens);
         }
         await writer.close().catch(() => {});
       } catch (_) {}

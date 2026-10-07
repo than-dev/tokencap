@@ -1,6 +1,6 @@
+import crypto from 'node:crypto';
 import { checkAndRecordLoop } from '../services/loopBuster';
 import { sendAlert } from './webhook';
-import crypto from 'node:crypto';
 
 /**
  * Extracts a deterministic signature of the latest turn/action of an agent request.

@@ -12,6 +12,7 @@ export type LoopBusterConfig = {
 export type TokenCapConfig = {
   realKey: string;
   provider: 'openai' | 'anthropic' | 'google';
+  budgetMode?: 'usd' | 'tokens';
   hardCapDaily: number;
   hardCapMonthly: number;
   rollingWindowCap: number;
@@ -40,6 +41,7 @@ export type UsageRecord = {
   virtualKey: string;
   timestamp: number;
   cost: number;
+  tokens: number;
 };
 
 export type Env = {
