@@ -151,12 +151,7 @@ npm run dev
 
 ### Option 4: "Plug & Play" Embedded Decorator (For Node.js Backends)
 
-Se você está construindo seu próprio backend e quer limitar as requisições de IA diretamente no código sem rodar um proxy separado, a abordagem de Decorator/Interceptor é o padrão ouro da indústria.
-
-O TokenCap embarca o motor de validação e logs de forma local, interceptando e faturando tudo de forma invisível. Adotamos o padrão de **Injeção de Dependência (Client Explícito)** em vez de *Monkey-Patching Global*. Isso garante que:
-- O TokenCap não interfira no cache rigoroso de requisições de frameworks web modernos.
-- Ferramentas de observabilidade e APM continuem funcionando perfeitamente sem conflitos de rede.
-- Apenas o tráfego destinado à IA seja interceptado, preservando a performance de requisições da sua aplicação para outras APIs externas.
+Se você precisa limitar as requisições de IA diretamente na sua aplicação sem rodar um proxy separado, você pode usar os interceptors nativos do TokenCap. O motor de validação roda localmente de forma invisível.
 
 #### 1. Envelopando SDKs Oficiais (OpenAI / Anthropic)
 O `withTokenCap` pega a instância original do SDK e intercepta a requisição interna, resolvendo todo o fluxo financeiro silenciosamente.
