@@ -149,36 +149,55 @@ npm run dev
 
 ---
 
-### Option 4: "Plug & Play" Node.js SDK (For Wrappers & SaaS)
+### Option 4: "Plug & Play" Embedded Decorator (For Node.js Backends)
 
-If you are building your own backend or SaaS and want to use TokenCap's intelligence (budgeting, loop busting, DB storage) directly inside your code without running a separate proxy, you can import the `TokenCapGuard` SDK:
+Se você está construindo seu próprio backend (Next.js, Express, NestJS) e quer limitar as requisições de IA diretamente no código sem rodar um proxy separado, a abordagem de Decorator/Interceptor é o padrão ouro da indústria.
+
+O TokenCap embarca o motor de validação e logs no SQLite local, interceptando e faturando tudo de forma invisível.
+
+#### 1. Envelopando SDKs Oficiais (OpenAI / Anthropic)
+O `withTokenCap` pega a instância original do SDK e intercepta a requisição interna, resolvendo todo o fluxo financeiro silenciosamente.
 
 ```typescript
-import { TokenCapGuard } from 'tokencap';
-import type { TokenCapConfig } from 'tokencap';
+import { withTokenCap } from 'tokencap';
+import OpenAI from 'openai';
 
-const guard = new TokenCapGuard(); // Uses tokencap.sqlite by default
+// O Decorator intercepta a requisição e gerencia os limites no SQLite local
+const openai = withTokenCap(new OpenAI(), { 
+  user: 'usr_123', 
+  budgetMode: 'tokens', 
+  dailyCap: 100000 
+});
 
-const config: TokenCapConfig = {
-  provider: 'openai',
-  budgetMode: 'tokens', // 'usd' (default) or 'tokens'
-  hardCapDaily: 50000,  // Max 50,000 tokens/day
-  rollingWindowCap: 10000, 
-  rollingWindowSeconds: 3600 
-};
+// A chamada segue idêntica à oficial. Se o limite estourar, 
+// o wrapper bloqueia antes de bater na rede e lança um 429 nativo do SDK.
+const response = await openai.chat.completions.create({ model: 'gpt-4o', ... });
+```
 
-// Check budget before making your API call
-const check = guard.checkBudget('user_premium_01', config);
-if (!check.allowed) {
-  return res.status(429).json(check); // Automatically returns Retry-After
-}
+#### 2. Interceptor Nativo para Axios (Dynamic Context)
+Para quem usa o Axios globalmente, exportamos interceptadores limpos. O client global é instanciado uma única vez, e o contexto flui a cada requisição:
 
-// ... make OpenAI API call ...
-const cost = 0; 
-const tokens = 1500;
+```typescript
+import axios from 'axios';
+import { applyTokenCapInterceptor } from 'tokencap';
 
-// Record the usage
-guard.updateUsage('user_premium_01', config, cost, tokens);
+const api = axios.create();
+applyTokenCapInterceptor(api);
+
+// Na controller (Express/Next.js):
+await api.post('https://api.openai.com/v1/chat/completions', data, {
+  // Passa o contexto na hora da chamada, sem recriar o client!
+  tokencap: { user: req.user.id, dailyCap: 10000 } 
+});
+```
+
+#### 3. Motor Raw Fetch
+Caso você precise passar um cliente genérico ou rodar chamadas com `fetch` manual:
+```typescript
+import { createTokenCapFetch } from 'tokencap';
+
+const myFetch = createTokenCapFetch({ user: 'usr_1', dailyCap: 100 });
+const res = await myFetch('https://api.openai.com/v1/chat/completions', { ... });
 ```
 
 ---
