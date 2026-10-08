@@ -206,6 +206,21 @@ const res = await myFetch('https://api.openai.com/v1/chat/completions', {
 });
 ```
 
+#### 4. Wrapper Configuration Options
+When configuring `withTokenCap`, `applyTokenCapInterceptor`, or `createTokenCapFetch` (or passing the `tokencap` object dynamically), you can use the following options:
+
+| Property | Type | Description |
+|---|---|---|
+| `user` (or `virtualKey`) | `string` | **Required.** Identifier for the user, agent, or tenant to track usage against. |
+| `dailyCap` (or `hardCapDaily`) | `number` | Maximum tokens or USD allowed per day. |
+| `monthlyCap` (or `hardCapMonthly`) | `number` | Maximum tokens or USD allowed per month. |
+| `budgetMode` | `'tokens' \| 'usd'` | Whether to track limits by token counts or raw USD cost. Default is `'usd'`. |
+| `rollingWindowCap` | `number` | Maximum tokens or USD allowed within the rolling window. |
+| `rollingWindowSeconds` | `number` | Size of the rolling window in seconds (e.g., 3600 for 1 hour). |
+| `provider` | `'openai' \| 'anthropic' \| 'google'`| Overrides automatic provider detection. |
+
+*(All advanced config fields like `autoPacing`, `loopBuster`, and `webhookUrl` from the global `tokencap.json` are also supported in the wrapper options).*
+
 ---
 
 ## ⚙️ Configuration Reference (`tokencap.json`)
