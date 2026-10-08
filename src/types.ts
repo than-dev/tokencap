@@ -31,6 +31,14 @@ export type TokenCapWrapperOptions = Partial<TokenCapConfig> & {
   monthlyCap?: number;
 };
 
+export type SupportedSDKClient = { fetch: Function } & (
+  | { chat: any }      // OpenAI
+  | { messages: any }  // Anthropic
+  | { models: any }    // Google Gemini
+);
+
+export type TokenCapFetch = (url: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
 export type BudgetCheckResult = {
   allowed: boolean;
   reason?: string;

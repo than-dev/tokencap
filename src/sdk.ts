@@ -1,6 +1,6 @@
 import { deleteUsageForKey, getRecentUsage } from './db/usageRepository';
 import { checkBudget, updateUsage } from './services/budget';
-import type { BudgetCheckResult, TokenCapConfig, TokenCapWrapperOptions } from './types';
+import type { BudgetCheckResult, SupportedSDKClient, TokenCapConfig, TokenCapFetch, TokenCapWrapperOptions } from './types';
 import { handleLoopBuster } from './utils/loopDetector';
 import { calculateCost } from './utils/pricing';
 
@@ -33,16 +33,17 @@ export class TokenCapGuard {
 }
 
 /**
- * Wraps an official SDK client (like OpenAI or Anthropic) to transparently enforce budgets
- * and track usage via the local SQLite database.
- *
+ * Creates a budget-aware global fetch function. Useful if you're not using official SDKs
+ * but making raw HTTP calls (via fetch) or configuring Axios.
+ * 
  * @example
- * const openai = withTokenCap(new OpenAI(), { user: 'usr_123', budgetMode: 'tokens', dailyCap: 100000 });
+ * const myFetch = createTokenCapFetch({ user: 'usr_1', dailyCap: 100 });
+ * const res = await myFetch('https://api.openai.com/v1/chat/completions', { ... });
  */
-export function withTokenCap<T extends { fetch: Function }>(
-  client: T,
+export function createTokenCapFetch(
   options: TokenCapWrapperOptions,
-): T {
+  originalFetch: TokenCapFetch = globalThis.fetch.bind(globalThis)
+): TokenCapFetch {
   // Normalize config from wrapper options
   const config = {
     ...options,
@@ -54,10 +55,7 @@ export function withTokenCap<T extends { fetch: Function }>(
     rollingWindowSeconds: options.rollingWindowSeconds ?? 0,
   } as TokenCapConfig;
 
-  // Bind the original fetch to the client so it has the correct `this` context
-  const originalFetch = client.fetch.bind(client);
-
-  client.fetch = async (url: RequestInfo, init?: RequestInit): Promise<Response> => {
+  return async (url: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const urlString = url.toString();
     const virtualKey = options.user || options.virtualKey || 'default';
 
@@ -119,7 +117,7 @@ export function withTokenCap<T extends { fetch: Function }>(
     if (bodyStr) {
       modifiedInit.body = bodyStr;
       if (modifiedInit.headers) {
-        const headers = new Headers(modifiedInit.headers);
+        const headers = new Headers(modifiedInit.headers as any);
         headers.delete('content-length');
 
         // Convert headers to Record<string, string> since fetch init expects that or Headers object
@@ -264,6 +262,21 @@ export function withTokenCap<T extends { fetch: Function }>(
       headers: response.headers,
     });
   };
+}
 
+/**
+ * Wraps an official SDK client (like OpenAI or Anthropic) to transparently enforce budgets
+ * and track usage via the local SQLite database.
+ *
+ * @example
+ * const openai = withTokenCap(new OpenAI(), { user: 'usr_123', budgetMode: 'tokens', dailyCap: 100000 });
+ */
+export function withTokenCap<T extends SupportedSDKClient>(
+  client: T,
+  options: TokenCapWrapperOptions,
+): T {
+  // Bind the original fetch to the client so it has the correct `this` context
+  const originalFetch = client.fetch.bind(client);
+  client.fetch = createTokenCapFetch(options, originalFetch as TokenCapFetch);
   return client;
 }
