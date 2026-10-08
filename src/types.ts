@@ -24,6 +24,13 @@ export type TokenCapConfig = {
   alertThresholdPercent?: number;
 };
 
+export type TokenCapWrapperOptions = Partial<TokenCapConfig> & {
+  user?: string;
+  virtualKey?: string;
+  dailyCap?: number;
+  monthlyCap?: number;
+};
+
 export type BudgetCheckResult = {
   allowed: boolean;
   reason?: string;

@@ -1,4 +1,4 @@
-export { TokenCapGuard } from './sdk';
+export { TokenCapGuard, withTokenCap } from './sdk';
 export type {
   AutoPacingConfig,
   BudgetCheckResult,

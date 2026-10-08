@@ -1,6 +1,6 @@
 {
   "name": "tokencap",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Lightweight self-hosted proxy to prevent AI agent runaway token usage and budget overflow.",
   "main": "dist/index.js",
   "bin": {
@@ -47,6 +47,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@types/better-sqlite3": "^9.6.0",
+    "openai": "^7.30.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
