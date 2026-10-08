@@ -191,13 +191,21 @@ await api.post('https://api.openai.com/v1/chat/completions', data, {
 });
 ```
 
-#### 3. Motor Raw Fetch
-Caso você precise passar um cliente genérico ou rodar chamadas com `fetch` manual:
+#### 3. Motor Raw Fetch (Dynamic Context)
+Caso você construa suas chamadas manualmente, exportamos a factory `createTokenCapFetch`. Igual ao Axios, você pode instanciar um `fetch` global e passar a identidade apenas no momento da requisição usando a propriedade estendida `tokencap`:
+
 ```typescript
 import { createTokenCapFetch } from 'tokencap';
 
-const myFetch = createTokenCapFetch({ user: 'usr_1', dailyCap: 100 });
-const res = await myFetch('https://api.openai.com/v1/chat/completions', { ... });
+// Instanciado uma única vez na sua base de código
+const myFetch = createTokenCapFetch();
+
+// Na controller (Express/Next.js):
+const res = await myFetch('https://api.openai.com/v1/chat/completions', {
+  method: 'POST',
+  body: JSON.stringify({ ... }),
+  tokencap: { user: req.user.id, dailyCap: 50000 } // O contexto flui aqui!
+});
 ```
 
 ---

@@ -1,6 +1,6 @@
 import { deleteUsageForKey, getRecentUsage } from './db/usageRepository';
 import { checkBudget, updateUsage } from './services/budget';
-import type { BudgetCheckResult, SupportedSDKClient, TokenCapConfig, TokenCapFetch, TokenCapWrapperOptions } from './types';
+import type { BudgetCheckResult, SupportedSDKClient, TokenCapConfig, TokenCapFetch, TokenCapRequestInit, TokenCapWrapperOptions } from './types';
 import { handleLoopBuster } from './utils/loopDetector';
 import { calculateCost } from './utils/pricing';
 
@@ -41,23 +41,31 @@ export class TokenCapGuard {
  * const res = await myFetch('https://api.openai.com/v1/chat/completions', { ... });
  */
 export function createTokenCapFetch(
-  options: TokenCapWrapperOptions,
+  options?: TokenCapWrapperOptions,
   originalFetch: TokenCapFetch = globalThis.fetch.bind(globalThis)
 ): TokenCapFetch {
-  // Normalize config from wrapper options
-  const config = {
-    ...options,
-    realKey: options.realKey || '',
-    provider: options.provider || 'openai',
-    hardCapDaily: options.dailyCap ?? options.hardCapDaily ?? 0,
-    hardCapMonthly: options.monthlyCap ?? options.hardCapMonthly ?? 0,
-    rollingWindowCap: options.rollingWindowCap ?? 0,
-    rollingWindowSeconds: options.rollingWindowSeconds ?? 0,
+  // Normalize global config
+  const globalConfig = {
+    ...(options || {}),
+    realKey: options?.realKey || '',
+    provider: options?.provider || 'openai',
+    hardCapDaily: options?.dailyCap ?? options?.hardCapDaily ?? 0,
+    hardCapMonthly: options?.monthlyCap ?? options?.hardCapMonthly ?? 0,
+    rollingWindowCap: options?.rollingWindowCap ?? 0,
+    rollingWindowSeconds: options?.rollingWindowSeconds ?? 0,
   } as TokenCapConfig;
 
-  return async (url: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  return async (url: RequestInfo | URL, init?: TokenCapRequestInit): Promise<Response> => {
     const urlString = url.toString();
-    const virtualKey = options.user || options.virtualKey || 'default';
+    const dynamicOpts = init?.tokencap || {};
+    
+    const virtualKey = dynamicOpts.user || dynamicOpts.virtualKey || options?.user || options?.virtualKey || 'default';
+    const config = {
+      ...globalConfig,
+      ...dynamicOpts,
+      hardCapDaily: dynamicOpts.dailyCap ?? dynamicOpts.hardCapDaily ?? globalConfig.hardCapDaily,
+      hardCapMonthly: dynamicOpts.monthlyCap ?? dynamicOpts.hardCapMonthly ?? globalConfig.hardCapMonthly,
+    } as TokenCapConfig;
 
     // 1. Budget Check
     const budgetCheck = checkBudget(virtualKey, config);

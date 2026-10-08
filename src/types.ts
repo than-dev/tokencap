@@ -39,6 +39,11 @@ export type SupportedSDKClient = { fetch: Function } & (
 
 export type TokenCapFetch = (url: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
+export interface TokenCapRequestInit extends Omit<RequestInit, 'window'> {
+  tokencap?: TokenCapWrapperOptions;
+  window?: any;
+}
+
 export type BudgetCheckResult = {
   allowed: boolean;
   reason?: string;
