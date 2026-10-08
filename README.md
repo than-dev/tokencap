@@ -153,7 +153,10 @@ npm run dev
 
 Se você está construindo seu próprio backend (Next.js, Express, NestJS) e quer limitar as requisições de IA diretamente no código sem rodar um proxy separado, a abordagem de Decorator/Interceptor é o padrão ouro da indústria.
 
-O TokenCap embarca o motor de validação e logs no SQLite local, interceptando e faturando tudo de forma invisível.
+O TokenCap embarca o motor de validação e logs no SQLite local, interceptando e faturando tudo de forma invisível. Adotamos o padrão de **Injeção de Dependência (Client Explícito)** em vez de *Monkey-Patching Global* (`global.fetch`). Isso garante que:
+- O TokenCap não interfira no cache rigoroso de requisições de frameworks modernos como o Next.js.
+- Ferramentas de APM (Datadog, Sentry) continuem funcionando perfeitamente.
+- Apenas o tráfego destinado à IA seja interceptado, preservando a performance de requisições para seu banco de dados ou outras APIs.
 
 #### 1. Envelopando SDKs Oficiais (OpenAI / Anthropic)
 O `withTokenCap` pega a instância original do SDK e intercepta a requisição interna, resolvendo todo o fluxo financeiro silenciosamente.
