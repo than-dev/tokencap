@@ -1,20 +1,11 @@
-# 🛡️ TokenCap
+### TokenCap
 
 > **The open-source safety seatbelt for autonomous AI agents.**  
 > Enforce hard caps, rolling-window limits, and multi-provider protection against infinite loops and runaway credit card bills.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/tokencap/tokencap/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
-[![Node: >=20](https://img.shields.io/badge/Node->=20-brightgreen.svg)](package.json)
-[![Docker: Ready](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](Dockerfile)
-[![Self-Hosted](https://img.shields.io/badge/Self--Hosted-SQLite-blueviolet.svg)](src/db/store.ts)
-[![Tests: 31 Passing](https://img.shields.io/badge/Tests-31%20Passing-success.svg)](test/)
-[![Console: Ready](https://img.shields.io/badge/Console-localhost:8787-ember.svg)](http://localhost:8787/dashboard)
-[![llms.txt](https://img.shields.io/badge/llms.txt-Standard-blue)](llms.txt)
-
 ---
 
-## 💥 The Problem
+#### The Problem
 
 Autonomous agents (like Google Antigravity, AutoGPT, Claude Code, CrewAI, Cline, and custom scripts) can fail silently:
 * They enter **recursive reasoning loops** attempting to fix the same error repeatedly.
@@ -23,7 +14,7 @@ Autonomous agents (like Google Antigravity, AutoGPT, Claude Code, CrewAI, Cline,
 
 Traditional FinOps tools (Portkey, LiteLLM, Helicone) are often hosted cloud platforms, expensive, or complex to configure.
 
-## 🛡️ The Solution: TokenCap
+#### The Solution: TokenCap
 
 TokenCap is a **lightweight, self-hosted reverse proxy** that sits between your agents and your AI providers on `localhost:8787` (or inside your private network/Docker stack):
 
@@ -51,9 +42,9 @@ TokenCap is a **lightweight, self-hosted reverse proxy** that sits between your 
 
 ---
 
-## ⚡ Quick Start
+#### Quick Start
 
-### Option 1: NPX / Global CLI (Fastest — Zero Setup)
+##### Option 1: NPX / Global CLI (Fastest — Zero Setup)
 
 Run immediately with zero setup:
 ```bash
@@ -90,7 +81,7 @@ tokencap --port 9000 --config ./my-budget.json --db ./vault.sqlite
 
 ---
 
-### Option 2: Docker Compose (Production & Containers)
+##### Option 2: Docker Compose (Production & Containers)
 
 1. Clone this repository:
    ```bash
@@ -118,7 +109,7 @@ tokencap --port 9000 --config ./my-budget.json --db ./vault.sqlite
 
 ---
 
-### Option 2: Docker CLI
+##### Option 2: Docker CLI
 
 ```bash
 docker build -t tokencap .
@@ -134,7 +125,7 @@ docker run -d \
 
 ---
 
-### Option 3: Local Node.js / Bun
+##### Option 3: Local Node.js / Bun
 
 ```bash
 npm install
@@ -149,11 +140,11 @@ npm run dev
 
 ---
 
-### Option 4: "Plug & Play" Embedded Decorator (For Node.js Backends)
+##### Option 4: "Plug & Play" Embedded Decorator (For Node.js Backends)
 
 If you need to limit AI requests directly within your application without running a separate proxy, you can use TokenCap's native interceptors. The validation engine runs locally and invisibly.
 
-#### 1. Wrapping Official SDKs (OpenAI / Anthropic)
+###### 1. Wrapping Official SDKs (OpenAI / Anthropic)
 `withTokenCap` takes the original SDK instance and intercepts internal requests, managing the financial flow silently.
 
 ```typescript
@@ -172,7 +163,7 @@ const openai = withTokenCap(new OpenAI(), {
 const response = await openai.chat.completions.create({ model: 'gpt-4o', ... });
 ```
 
-#### 2. Native Interceptor for Axios (Dynamic Context)
+###### 2. Native Interceptor for Axios (Dynamic Context)
 For global Axios usage, we export clean interceptors. The global client is instantiated once, and the context flows with each request:
 
 ```typescript
@@ -189,7 +180,7 @@ await api.post('https://api.openai.com/v1/chat/completions', data, {
 });
 ```
 
-#### 3. Raw Fetch Engine (Dynamic Context)
+###### 3. Raw Fetch Engine (Dynamic Context)
 If you build your calls manually, we export the `createTokenCapFetch` factory. Just like Axios, you can instantiate a global `fetch` and pass the identity per-request using the extended `tokencap` property:
 
 ```typescript
@@ -206,7 +197,7 @@ const res = await myFetch('https://api.openai.com/v1/chat/completions', {
 });
 ```
 
-#### 4. Wrapper Configuration Options
+###### 4. Wrapper Configuration Options
 When configuring `withTokenCap`, `applyTokenCapInterceptor`, or `createTokenCapFetch` (or passing the `tokencap` object dynamically), you can use the following options:
 
 | Property | Type | Description |
@@ -223,7 +214,7 @@ When configuring `withTokenCap`, `applyTokenCapInterceptor`, or `createTokenCapF
 
 ---
 
-## ⚙️ Configuration Reference (`tokencap.json`)
+#### Configuration Reference (`tokencap.json`)
 
 TokenCap configuration lives in `tokencap.json` (or `tokencap.yaml`):
 
@@ -270,7 +261,7 @@ TokenCap configuration lives in `tokencap.json` (or `tokencap.yaml`):
 }
 ```
 
-### Configuration Fields
+##### Configuration Fields
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
@@ -296,7 +287,7 @@ TokenCap configuration lives in `tokencap.json` (or `tokencap.yaml`):
 
 ---
 
-## 🚦 Cruise Control & Auto-Pacing (Self-Regulating Agents)
+#### Cruise Control & Auto-Pacing (Self-Regulating Agents)
 
 When running agents unattended overnight, traditional gateways fail hard with an error, killing the agent process after 15 minutes. 
 
@@ -307,7 +298,7 @@ TokenCap solves this with **Cruise Control**:
 
 ---
 
-## 🔁 Loop Buster (Agent Flapping Circuit Breaker)
+#### Loop Buster (Agent Flapping Circuit Breaker)
 
 One of the most insidious ways agents burn money is **repetitive flapping**: an agent runs a tool (e.g. `bash: npm test`), receives an error, and without changing its logic, retries the exact same command 10 or 20 times in a row.
 
@@ -330,11 +321,11 @@ TokenCap's **Loop Buster** stops this in its tracks:
 
 ---
 
-## 🔌 Integration Guides
+#### Integration Guides
 
 TokenCap acts as a drop-in transparent proxy. You **never** need to modify library source code—only set the base URL and pass your virtual key.
 
-### 1. Google Antigravity (AGY)
+##### 1. Google Antigravity (AGY)
 
 When running agents with Google Antigravity, override the base URL and API key in your terminal session or `.env`:
 
@@ -355,9 +346,9 @@ export GEMINI_BASE_URL="http://localhost:8787"
 
 ---
 
-### 2. OpenAI Official SDKs
+##### 2. OpenAI Official SDKs
 
-#### Python
+###### Python
 ```python
 from openai import OpenAI
 
@@ -377,7 +368,7 @@ for chunk in response:
         print(chunk.choices[0].delta.content, end="")
 ```
 
-#### TypeScript / Node.js
+###### TypeScript / Node.js
 ```typescript
 import OpenAI from 'openai';
 
@@ -396,9 +387,9 @@ console.log(response.choices[0].message.content);
 
 ---
 
-### 3. Anthropic Claude & Claude Code
+##### 3. Anthropic Claude & Claude Code
 
-#### Claude Code CLI
+###### Claude Code CLI
 
 **Option A: Global Terminal**
 ```bash
@@ -418,7 +409,7 @@ claude "Refactor the payment authentication module"
 }
 ```
 
-#### Python (`anthropic-sdk`)
+###### Python (`anthropic-sdk`)
 ```python
 import anthropic
 
@@ -437,11 +428,11 @@ print(message.content[0].text)
 
 ---
 
-### 4. Google Gemini (REST & SDK)
+##### 4. Google Gemini (REST & SDK)
 
 TokenCap intercepts `/v1beta/*` endpoints and injects your real Gemini API key securely.
 
-#### Python (`google-generativeai`)
+###### Python (`google-generativeai`)
 ```python
 import google.generativeai as genai
 
@@ -456,7 +447,7 @@ response = model.generate_content("Analyze this budget dataset.")
 print(response.text)
 ```
 
-#### cURL
+###### cURL
 ```bash
 curl "http://localhost:8787/v1beta/models/gemini-1.5-flash:generateContent" \
   -H "x-goog-api-key: my_virtual_gemini_key" \
@@ -466,7 +457,7 @@ curl "http://localhost:8787/v1beta/models/gemini-1.5-flash:generateContent" \
 
 ---
 
-### 5. Autonomous Frameworks & IDEs
+##### 5. Autonomous Frameworks & IDEs
 
 | Client / Tool | How to Configure |
 | :--- | :--- |
@@ -481,7 +472,7 @@ curl "http://localhost:8787/v1beta/models/gemini-1.5-flash:generateContent" \
 
 ---
 
-## 💰 Supported Models & Pricing Matrix
+#### Supported Models & Pricing Matrix
 
 TokenCap continuously tracks token usage and converts it to USD according to official provider rate sheets:
 
@@ -495,7 +486,7 @@ TokenCap continuously tracks token usage and converts it to USD according to off
 
 ---
 
-## 🚨 What Happens When a Budget is Exceeded?
+#### What Happens When a Budget is Exceeded?
 
 When your agent hits 100% of its rolling window or hard cap:
 
@@ -520,31 +511,31 @@ When your agent hits 100% of its rolling window or hard cap:
    * `x-ratelimit-reset-requests: 45`
    * `x-request-id: tokencap_uuid`
 3. If webhooks are configured, a notification is dispatched to Slack/Discord:
-   > 🚨 **TokenCap Alert**: Rolling window usage reached $0.5023 (Cap: 0.50) for key `my_virtual_key_dev`.
+   > **TokenCap Alert**: Rolling window usage reached $0.5023 (Cap: 0.50) for key `my_virtual_key_dev`.
 4. The agent halts gracefully. Your real API key is never billed again until the window resets or the daily limit rolls over.
 
 ---
 
-## 🌐 Production & Cloud Deployment
+#### Production & Cloud Deployment
 
 TokenCap can run on any Docker host or cloud VPS (Hetzner, DigitalOcean, Railway, Fly.io, Render, Coolify).
 
-### Critical: Persistent Storage
+##### Critical: Persistent Storage
 TokenCap stores usage records in SQLite (`tokencap.sqlite`). When deploying in containers:
 * **Always mount a persistent volume** to `/app/tokencap.sqlite` and `/app/tokencap.json`.
 * Without persistent storage, container restarts will reset accumulated usage counters.
 
-### System & Discovery Endpoints
+##### System & Discovery Endpoints
 * `GET /health` → Returns `HTTP 200` (`{"status":"ok","service":"tokencap","timestamp":...}`) for orchestrator liveness probes.
 * `GET /v1/models` (or `/models`) → Returns standard OpenAI model catalog for IDE autodiscovery (Cursor, Cline, Roo Code, LibreChat).
 * `GET /` → Returns `HTTP 200` status (or redirects to `/dashboard` in browser).
 
 ---
 
-## 📊 Local Command Console (Dashboard)
+#### Local Command Console (Dashboard)
 
 TokenCap includes a built-in, lightweight web console served directly with the application on:
-👉 **`http://localhost:8787/dashboard`** (or open `http://localhost:8787` in any browser)
+**`http://localhost:8787/dashboard`** (or open `http://localhost:8787` in any browser)
 
 * **Protected Console Access:** Authenticate via credentials defined in your `.env` file (`TOKENCAP_DASHBOARD_USER` and `TOKENCAP_DASHBOARD_PASSWORD`, defaulting to `admin`/`admin` if unset). Stateless HMAC-signed session cookies keep the console secure.
 * **Live Spend Tracking:** Real-time metrics for today's spend, month-to-date totals, and active in-flight calls.
@@ -555,7 +546,7 @@ TokenCap includes a built-in, lightweight web console served directly with the a
 
 ---
 
-## 🔒 Security Best Practices
+#### Security Best Practices
 
 1. **Keep `tokencap.json` Secret:** `tokencap.json` contains your real API keys. It is already added to [`.gitignore`](.gitignore) and [`.dockerignore`](.dockerignore). Never commit it to version control.
 2. **Use Virtual Keys in Code:** Only distribute virtual keys (e.g. `dev_agent_01`) to agent environments and development machines.
@@ -563,7 +554,7 @@ TokenCap includes a built-in, lightweight web console served directly with the a
 
 ---
 
-## 🧪 Development & Testing
+#### Development & Testing
 
 TokenCap uses Node's native test runner with zero mock dependencies for maximum speed and deterministic verification:
 
@@ -586,13 +577,13 @@ npm run build
 
 ---
 
-## 🤝 Contributing & Security
+#### Contributing & Security
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) and [Security Policy](SECURITY.md) before opening a pull request or submitting an issue.
 
 ---
 
-## 📄 License
+#### License
 
 TokenCap is open-source software licensed under the [MIT License](LICENSE).
 
