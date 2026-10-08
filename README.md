@@ -151,12 +151,12 @@ npm run dev
 
 ### Option 4: "Plug & Play" Embedded Decorator (For Node.js Backends)
 
-Se você está construindo seu próprio backend (Next.js, Express, NestJS) e quer limitar as requisições de IA diretamente no código sem rodar um proxy separado, a abordagem de Decorator/Interceptor é o padrão ouro da indústria.
+Se você está construindo seu próprio backend e quer limitar as requisições de IA diretamente no código sem rodar um proxy separado, a abordagem de Decorator/Interceptor é o padrão ouro da indústria.
 
-O TokenCap embarca o motor de validação e logs no SQLite local, interceptando e faturando tudo de forma invisível. Adotamos o padrão de **Injeção de Dependência (Client Explícito)** em vez de *Monkey-Patching Global* (`global.fetch`). Isso garante que:
-- O TokenCap não interfira no cache rigoroso de requisições de frameworks modernos como o Next.js.
-- Ferramentas de APM (Datadog, Sentry) continuem funcionando perfeitamente.
-- Apenas o tráfego destinado à IA seja interceptado, preservando a performance de requisições para seu banco de dados ou outras APIs.
+O TokenCap embarca o motor de validação e logs de forma local, interceptando e faturando tudo de forma invisível. Adotamos o padrão de **Injeção de Dependência (Client Explícito)** em vez de *Monkey-Patching Global*. Isso garante que:
+- O TokenCap não interfira no cache rigoroso de requisições de frameworks web modernos.
+- Ferramentas de observabilidade e APM continuem funcionando perfeitamente sem conflitos de rede.
+- Apenas o tráfego destinado à IA seja interceptado, preservando a performance de requisições da sua aplicação para outras APIs externas.
 
 #### 1. Envelopando SDKs Oficiais (OpenAI / Anthropic)
 O `withTokenCap` pega a instância original do SDK e intercepta a requisição interna, resolvendo todo o fluxo financeiro silenciosamente.
@@ -165,7 +165,7 @@ O `withTokenCap` pega a instância original do SDK e intercepta a requisição i
 import { withTokenCap } from 'tokencap';
 import OpenAI from 'openai';
 
-// O Decorator intercepta a requisição e gerencia os limites no SQLite local
+// O Decorator intercepta a requisição e gerencia os limites de forma local
 const openai = withTokenCap(new OpenAI(), { 
   user: 'usr_123', 
   budgetMode: 'tokens', 
@@ -187,7 +187,7 @@ import { applyTokenCapInterceptor } from 'tokencap';
 const api = axios.create();
 applyTokenCapInterceptor(api);
 
-// Na controller (Express/Next.js):
+// Na controller da aplicação:
 await api.post('https://api.openai.com/v1/chat/completions', data, {
   // Passa o contexto na hora da chamada, sem recriar o client!
   tokencap: { user: req.user.id, dailyCap: 10000 } 
@@ -203,7 +203,7 @@ import { createTokenCapFetch } from 'tokencap';
 // Instanciado uma única vez na sua base de código
 const myFetch = createTokenCapFetch();
 
-// Na controller (Express/Next.js):
+// Na controller da aplicação:
 const res = await myFetch('https://api.openai.com/v1/chat/completions', {
   method: 'POST',
   body: JSON.stringify({ ... }),
