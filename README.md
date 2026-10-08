@@ -21,7 +21,7 @@ TokenCap is a **lightweight, self-hosted reverse proxy** that sits between your 
 ```
 ┌─────────────────┐       Virtual Key       ┌──────────────────────┐       Real API Key       ┌─────────────────┐
 │                 │  http://localhost:8787  │      TokenCap        │  https://api.openai.com  │                 │
-│  AI Agent / CLI ├────────────────────────►│  (Checks SQLite Cap) ├─────────────────────────►│  Model Provider │
+│  AI Agent / CLI ├────────────────────────►│  (Checks Local Cap)  ├─────────────────────────►│  Model Provider │
 │  (Antigravity,  │◄────────────────────────┤                      │◄─────────────────────────┤ (OpenAI, Claude,│
 │   Claude, etc.) │   429 Too Many Requests │  • Rolling: $0.50/h  │     SSE Token Stream     │     Gemini)     │
 └─────────────────┘   (If budget exceeded)  │  • Daily:   $5.00/d  │                          └─────────────────┘
@@ -29,12 +29,12 @@ TokenCap is a **lightweight, self-hosted reverse proxy** that sits between your 
                                             └──────────┬───────────┘
                                                        │
                                               ┌────────▼─────────┐
-                                              │ tokencap.sqlite  │
+                                              │ Local Database   │
                                               │  (Local Ledger)  │
                                               └──────────────────┘
 ```
 
-1. **Zero External Latency:** Evaluates budget in microseconds using local SQLite (`better-sqlite3`).
+1. **Zero External Latency:** Evaluates budget in microseconds using a local database.
 2. **Transparent Proxy:** Works out of the box with standard SDKs by simply changing `BASE_URL`.
 3. **Hard Stop via HTTP 429:** When a budget cap is reached, TokenCap returns a standard `429 Too Many Requests`. SDKs and agents recognize this and halt gracefully without throwing fatal errors.
 4. **Streaming Accounting:** Parses Server-Sent Events (SSE) in real time, calculating input and output costs on the fly without breaking streaming UI responsiveness.
@@ -71,13 +71,13 @@ tokencap --port 9000 --config ./my-budget.json --db ./vault.sqlite
 | `-p, --port <number>` | Port to listen on | `8787` (or `$PORT`) |
 | `-H, --host <string>` | Host interface to bind to | `0.0.0.0` |
 | `-c, --config <path>` | Path to `tokencap.json` / YAML | `./tokencap.json` |
-| `-d, --db <path>` | Path to SQLite database file | `./tokencap.sqlite` |
+| `-d, --db <path>` | Path to local database file | `./database.db` |
 | `-o, --open` | Automatically open browser console | `false` |
 | `--user <string>` | Dashboard username | `admin` (or `$TOKENCAP_DASHBOARD_USER`) |
 | `--pass <string>` | Dashboard password | `admin` (or `$TOKENCAP_DASHBOARD_PASSWORD`) |
 | `tokencap init` | Create starter config & `.env` | Current directory |
 | `tokencap status` | Check running instance health | `http://localhost:8787/health` |
-| `tokencap reset <key>` | Reset spent balance for virtual key | Purges SQLite usage records |
+| `tokencap reset <key>` | Reset spent balance for virtual key | Purges local usage records |
 
 ---
 
@@ -118,7 +118,7 @@ docker run -d \
   --name tokencap \
   -p 8787:8787 \
   -v $(pwd)/tokencap.json:/app/tokencap.json \
-  -v $(pwd)/tokencap.sqlite:/app/tokencap.sqlite \
+  -v $(pwd)/database.db:/app/database.db \
   --restart unless-stopped \
   tokencap
 ```
@@ -521,8 +521,8 @@ When your agent hits 100% of its rolling window or hard cap:
 TokenCap can run on any Docker host or cloud VPS (Hetzner, DigitalOcean, Railway, Fly.io, Render, Coolify).
 
 ##### Critical: Persistent Storage
-TokenCap stores usage records in SQLite (`tokencap.sqlite`). When deploying in containers:
-* **Always mount a persistent volume** to `/app/tokencap.sqlite` and `/app/tokencap.json`.
+TokenCap stores usage records in a local database. When deploying in containers:
+* **Always mount a persistent volume** to `/app/database.db` and `/app/tokencap.json`.
 * Without persistent storage, container restarts will reset accumulated usage counters.
 
 ##### System & Discovery Endpoints
@@ -540,7 +540,7 @@ TokenCap includes a built-in, lightweight web console served directly with the a
 * **Protected Console Access:** Authenticate via credentials defined in your `.env` file (`TOKENCAP_DASHBOARD_USER` and `TOKENCAP_DASHBOARD_PASSWORD`, defaulting to `admin`/`admin` if unset). Stateless HMAC-signed session cookies keep the console secure.
 * **Live Spend Tracking:** Real-time metrics for today's spend, month-to-date totals, and active in-flight calls.
 * **Key Control Center:** Visual indicators of daily & sliding-window budget consumption per agent with auto-pacing status.
-* **Live Interceptions Ledger:** Chronological feed of the last 20 intercepted transactions recorded in SQLite WAL.
+* **Live Interceptions Ledger:** Chronological feed of the last 20 intercepted transactions recorded locally.
 * **Instant Key Configuration:** Add, edit, or reset virtual keys directly from the UI without manual file editing.
 * **Zero Overhead:** Pure HTML/CSS/JS served directly with zero external dependencies and zero telemetry.
 
