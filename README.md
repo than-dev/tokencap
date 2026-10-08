@@ -151,29 +151,29 @@ npm run dev
 
 ### Option 4: "Plug & Play" Embedded Decorator (For Node.js Backends)
 
-Se você precisa limitar as requisições de IA diretamente na sua aplicação sem rodar um proxy separado, você pode usar os interceptors nativos do TokenCap. O motor de validação roda localmente de forma invisível.
+If you need to limit AI requests directly within your application without running a separate proxy, you can use TokenCap's native interceptors. The validation engine runs locally and invisibly.
 
-#### 1. Envelopando SDKs Oficiais (OpenAI / Anthropic)
-O `withTokenCap` pega a instância original do SDK e intercepta a requisição interna, resolvendo todo o fluxo financeiro silenciosamente.
+#### 1. Wrapping Official SDKs (OpenAI / Anthropic)
+`withTokenCap` takes the original SDK instance and intercepts internal requests, managing the financial flow silently.
 
 ```typescript
 import { withTokenCap } from 'tokencap';
 import OpenAI from 'openai';
 
-// O Decorator intercepta a requisição e gerencia os limites de forma local
+// The Decorator intercepts requests and manages limits locally
 const openai = withTokenCap(new OpenAI(), { 
   user: 'usr_123', 
   budgetMode: 'tokens', 
   dailyCap: 100000 
 });
 
-// A chamada segue idêntica à oficial. Se o limite estourar, 
-// o wrapper bloqueia antes de bater na rede e lança um 429 nativo do SDK.
+// Calls remain identical to the official SDK. If the limit is exceeded, 
+// the wrapper blocks it before hitting the network and throws a native SDK 429 error.
 const response = await openai.chat.completions.create({ model: 'gpt-4o', ... });
 ```
 
-#### 2. Interceptor Nativo para Axios (Dynamic Context)
-Para quem usa o Axios globalmente, exportamos interceptadores limpos. O client global é instanciado uma única vez, e o contexto flui a cada requisição:
+#### 2. Native Interceptor for Axios (Dynamic Context)
+For global Axios usage, we export clean interceptors. The global client is instantiated once, and the context flows with each request:
 
 ```typescript
 import axios from 'axios';
@@ -182,27 +182,27 @@ import { applyTokenCapInterceptor } from 'tokencap';
 const api = axios.create();
 applyTokenCapInterceptor(api);
 
-// Na controller da aplicação:
+// In your application controller/route:
 await api.post('https://api.openai.com/v1/chat/completions', data, {
-  // Passa o contexto na hora da chamada, sem recriar o client!
+  // Pass the context at call time, without recreating the client!
   tokencap: { user: req.user.id, dailyCap: 10000 } 
 });
 ```
 
-#### 3. Motor Raw Fetch (Dynamic Context)
-Caso você construa suas chamadas manualmente, exportamos a factory `createTokenCapFetch`. Igual ao Axios, você pode instanciar um `fetch` global e passar a identidade apenas no momento da requisição usando a propriedade estendida `tokencap`:
+#### 3. Raw Fetch Engine (Dynamic Context)
+If you build your calls manually, we export the `createTokenCapFetch` factory. Just like Axios, you can instantiate a global `fetch` and pass the identity per-request using the extended `tokencap` property:
 
 ```typescript
 import { createTokenCapFetch } from 'tokencap';
 
-// Instanciado uma única vez na sua base de código
+// Instantiated once in your codebase
 const myFetch = createTokenCapFetch();
 
-// Na controller da aplicação:
+// In your application controller/route:
 const res = await myFetch('https://api.openai.com/v1/chat/completions', {
   method: 'POST',
   body: JSON.stringify({ ... }),
-  tokencap: { user: req.user.id, dailyCap: 50000 } // O contexto flui aqui!
+  tokencap: { user: req.user.id, dailyCap: 50000 } // Context flows here!
 });
 ```
 
