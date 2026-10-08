@@ -2,6 +2,8 @@
 
 > **The open-source safety seatbelt for autonomous AI agents.**  
 > Enforce hard caps, rolling-window limits, and multi-provider protection against infinite loops and runaway credit card bills.
+>
+> **Website:** [tokencap.pages.dev](https://tokencap.pages.dev)
 
 ---
 
@@ -38,7 +40,18 @@ TokenCap is a **lightweight, self-hosted reverse proxy** that sits between your 
 2. **Transparent Proxy:** Works out of the box with standard SDKs by simply changing `BASE_URL`.
 3. **Hard Stop via HTTP 429:** When a budget cap is reached, TokenCap returns a standard `429 Too Many Requests`. SDKs and agents recognize this and halt gracefully without throwing fatal errors.
 4. **Streaming Accounting:** Parses Server-Sent Events (SSE) in real time, calculating input and output costs on the fly without breaking streaming UI responsiveness.
-5. **No Cloud Dependencies:** No vendor lock-in, no telemetry, no Cloudflare accounts needed.
+5. **No Cloud Dependencies:** No vendor lock-in and no telemetry. Everything runs locally on your infrastructure.
+
+---
+
+#### What You Can Do With TokenCap
+
+TokenCap provides autonomous safety features that go beyond simple rate-limiting:
+
+* **Hard Caps & Rolling Budgets:** Set exact daily or monthly spending limits (or token limits) per agent.
+* **Cruise Control (Auto-Pacing):** Instead of crashing your agent when limits are hit, TokenCap intelligently holds the connection and forwards the request as soon as balance frees up.
+* **Loop Buster (Circuit Breaker):** Detects if an agent is stuck in an infinite retry loop (e.g., repeatedly failing a tool call) and instantly cuts the connection to save your budget.
+* **Smart Webhooks:** Schedules automatic wake-up callbacks the moment your budget window reopens so orchestrators can resume paused tasks.
 
 ---
 
